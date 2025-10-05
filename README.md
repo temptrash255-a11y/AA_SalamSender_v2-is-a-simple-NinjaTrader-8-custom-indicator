@@ -120,4 +120,158 @@ networkStream.Write(messageBytes, 0, messageBytes.Length);
 
 ---
 
-آیا مایل هستی من نسخه فارسی همین README رو هم برات بنویسم تا در انجمن‌های فارسی مثل MQL5 یا NinjaTrader.ir منتشرش کنی؟
+
+
+
+#region Using declarations
+using System;
+using System.Text;
+using System.Net.Sockets;
+using System.Threading;
+using NinjaTrader.NinjaScript;
+using NinjaTrader.Gui.Chart;
+using NinjaTrader.Data;
+using System.Windows.Media;
+#endregion
+
+namespace NinjaTrader.NinjaScript.Indicators
+{
+	public class AA_SalamSender_v2 : Indicator
+	{
+	    private TcpClient tcpClient;
+        private NetworkStream networkStream;
+        private Timer sendDataTimer;
+        private string serverIp = "127.0.0.1";
+        private int serverPort = 6060;
+
+		protected override void OnStateChange()
+		{
+			if (State == State.SetDefaults)
+			{
+		 		Description = @"ارسال کلمه سلام هر 1 ثانیه از طریق TCP Socket.";
+		        Name = "AA_SalamSender_v2";
+		        Calculate = Calculate.OnEachTick;
+		        IsOverlay = false;
+				AddPlot(Brushes.Lime, "DummyPlot");
+			}
+			else if (State == State.DataLoaded)
+			{
+		        try
+		        {
+		            Print("Connecting to TCP server...");
+		            tcpClient = new TcpClient(serverIp, serverPort);
+		            networkStream = tcpClient.GetStream();
+		            sendDataTimer = new Timer(SendSalamToServer, null, 0, 1000);
+		            Print("Connected successfully. Sending 'سلام' every 1 second...");
+		        }
+		        catch (Exception ex)
+		        {
+		            Print("Connection error: " + ex.Message);
+		        }
+			}
+			else if (State == State.Terminated)
+			{
+		        try
+				{
+					if (sendDataTimer != null)
+					    sendDataTimer.Dispose();
+
+					if (networkStream != null)
+					    networkStream.Close();
+
+					if (tcpClient != null)
+					    tcpClient.Close();
+		            Print("Terminated: resources closed.");
+		        }
+		        catch (Exception ex)
+		        {
+		            Print("Cleanup error: " + ex.Message);
+		        }
+			}
+		}
+
+		private void SendSalamToServer(object state)
+		{
+		    try
+		    {
+		        if (tcpClient != null && tcpClient.Connected && networkStream != null)
+		        {
+		            string message = "Hello";
+		            byte[] messageBytes = Encoding.UTF8.GetBytes(message);
+		            networkStream.Write(messageBytes, 0, messageBytes.Length);
+		            Print("Sent: " + message);
+		        }
+		        else
+		        {
+		            Print("Socket not connected.");
+		        }
+		    }
+		    catch (Exception ex)
+		    {
+		        Print("Error sending data: " + ex.Message);
+		    }
+		}
+
+		protected override void OnBarUpdate()
+		{
+			// No logic here
+		}
+	}
+}
+
+#region NinjaScript generated code. Neither change nor remove.
+
+namespace NinjaTrader.NinjaScript.Indicators
+{
+	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
+	{
+		private AA_SalamSender_v2[] cacheAA_SalamSender_v2;
+		public AA_SalamSender_v2 AA_SalamSender_v2()
+		{
+			return AA_SalamSender_v2(Input);
+		}
+
+		public AA_SalamSender_v2 AA_SalamSender_v2(ISeries<double> input)
+		{
+			if (cacheAA_SalamSender_v2 != null)
+				for (int idx = 0; idx < cacheAA_SalamSender_v2.Length; idx++)
+					if (cacheAA_SalamSender_v2[idx] != null &&  cacheAA_SalamSender_v2[idx].EqualsInput(input))
+						return cacheAA_SalamSender_v2[idx];
+			return CacheIndicator<AA_SalamSender_v2>(new AA_SalamSender_v2(), input, ref cacheAA_SalamSender_v2);
+		}
+	}
+}
+
+namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
+{
+	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
+	{
+		public Indicators.AA_SalamSender_v2 AA_SalamSender_v2()
+		{
+			return indicator.AA_SalamSender_v2(Input);
+		}
+
+		public Indicators.AA_SalamSender_v2 AA_SalamSender_v2(ISeries<double> input )
+		{
+			return indicator.AA_SalamSender_v2(input);
+		}
+	}
+}
+
+namespace NinjaTrader.NinjaScript.Strategies
+{
+	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
+	{
+		public Indicators.AA_SalamSender_v2 AA_SalamSender_v2()
+		{
+			return indicator.AA_SalamSender_v2(Input);
+		}
+
+		public Indicators.AA_SalamSender_v2 AA_SalamSender_v2(ISeries<double> input )
+		{
+			return indicator.AA_SalamSender_v2(input);
+		}
+	}
+}
+
+#endregion
